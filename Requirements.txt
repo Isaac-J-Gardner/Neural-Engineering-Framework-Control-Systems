@@ -1,0 +1,5 @@
+neat-python==1.1.0
+nengo==4.1.0
+nengo-gui==0.6.0
+numpy==2.4.1
+pygame==2.6.1
