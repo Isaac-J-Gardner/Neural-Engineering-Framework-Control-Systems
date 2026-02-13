@@ -6,22 +6,26 @@ pygame.init()
 
 class paddle:
 
-    def __init__(self, x, y, W, H, v):
+    def __init__(self, x, y, W, H):
         self.x = x
         self.y = y
-        self.vel = v
+        self.vel = 0
+        self.acc = 0
         self.W = W
         self.H = H
 
     def step(self):
+        self.vel += self.acc
         max_y = 400 - self.H/2
         self.y += self.vel
         
         if self.y > max_y:
             self.y = max_y
+            self.vel = 0
             
         if self.y < self.H/2:
             self.y = self.H/2
+            self.vel = 0
     
 class ball:
 
@@ -55,8 +59,6 @@ class ball:
         self.vy = self.v * math.sin(angle)
 
 class game:
-    pygame.font.init()
-    FONT = pygame.font.SysFont("Ariel", 30)
 
     def __init__(self, disp_W, disp_H, box_W, box_H, do_display, do_tick):
         self.screen = pygame.display.set_mode((disp_W, disp_H))
@@ -67,7 +69,7 @@ class game:
         self.x_offset = (disp_W - box_W)/2
         self.y_offset = (disp_H - box_H)/2
         
-        self.paddle = paddle(5, box_H/2, 6, 100, 5)
+        self.paddle = paddle(5, box_H/2, 6, 100)
         self.ball = ball(box_W, box_H/2, 5)
         
         self.disp_W = disp_W
@@ -80,7 +82,6 @@ class game:
         
         self.score = 0
         self.end = False
-        self.error = []
 
         self.game_state = {"x": self.ball.x,
                           "y": self.ball.y,
@@ -88,6 +89,7 @@ class game:
                           "vy": self.ball.vy,
                           "py": self.paddle.y,
                           "pvel": self.paddle.vel,
+                          "pacc": self.paddle.acc
                 }
         
     def loop(self):
@@ -96,10 +98,16 @@ class game:
                 pygame.quit()
                 sys.exit()
 
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP]:
+            self.change_paddle_vel(0.1)
+        if keys[pygame.K_DOWN]:
+            self.change_paddle_vel(-0.1)
+
         self.step()
 
         if self.do_display: 
-            self.display()
+            self.display(self.screen)
             pygame.display.flip()
 
         if self.do_tick: 
@@ -118,6 +126,7 @@ class game:
                           "vy": self.ball.vy,
                           "py": self.paddle.y,
                           "pvel": self.paddle.vel,
+                          "pacc": self.paddle.acc
                 }
 
         game_info = [self.game_state["x"],
@@ -125,7 +134,8 @@ class game:
                     self.game_state["vx"],
                     self.game_state["vy"],
                     self.game_state["py"],
-                    self.game_state["pvel"]]
+                    self.game_state["pvel"],
+                    self.game_state["pacc"]]
         
         return game_info
     
@@ -135,7 +145,8 @@ class game:
                     self.game_state["vx"],
                     self.game_state["vy"],
                     self.game_state["py"],
-                    self.game_state["pvel"]]
+                    self.game_state["pvel"],
+                    self.game_state["pacc"]]
         
         return game_info
     
@@ -145,12 +156,10 @@ class game:
     def collision_handler(self):
         if pygame.Rect((self.x_offset + self.paddle.x + self.paddle.W/2, self.disp_H - (self.y_offset + self.paddle.y + self.paddle.H/2)), (self.paddle.W, self.paddle.H)).collidepoint((self.x_offset + self.ball.x - 2.5, self.disp_H - (self.y_offset + self.ball.y))):
             self.ball.bounce_paddle(self.paddle)
-            self.error.append((self.paddle.y - self.ball.y)/(self.box_H-self.paddle.H/2)) #normalised error
             self.score += 1
             
         if self.ball.x - self.ball.radius < 0:
             self.ball.bounce_vert(-self.ball.x + self.ball.radius)
-            self.error.append((self.paddle.y - self.ball.y)/(self.box_H-self.paddle.H/2))
             self.end = True
             return
             
@@ -167,16 +176,18 @@ class game:
         self.paddle = paddle(5, self.box_H/2, 6, 100, 5)
         self.ball = ball(self.box_W/2, self.box_H/2, 5)
 
-    def display(self):
+    def display(self, screen: pygame.Surface):
         self.screen.fill("#000000")
-        pygame.draw.rect(self.screen, ("#EEEEEE"), ((self.x_offset, self.y_offset),(self.box_W, self.box_H)), width = 1)
-        pygame.draw.circle(self.screen, ("#EEEEEE"), (self.x_offset + self.ball.x, self.disp_H - (self.y_offset + self.ball.y)), radius = 5)
-        pygame.draw.rect(self.screen, ("#EEEEEE"), ((self.x_offset + self.paddle.x + self.paddle.W/2, self.disp_H - (self.y_offset + self.paddle.y + self.paddle.H/2)), (self.paddle.W, self.paddle.H)), width = 0)
-        text = self.FONT.render(str(self.score), 1, "#FFFFFF")
-        self.screen.blit(text, (20, 250))
+        pygame.draw.rect(screen, ("#EEEEEE"), ((self.x_offset, self.y_offset),(self.box_W, self.box_H)), width = 1)
+        pygame.draw.circle(screen, ("#EEEEEE"), (self.x_offset + self.ball.x, self.disp_H - (self.y_offset + self.ball.y)), radius = 5)
+        pygame.draw.rect(screen, ("#EEEEEE"), ((self.x_offset + self.paddle.x + self.paddle.W/2, self.disp_H - (self.y_offset + self.paddle.y + self.paddle.H/2)), (self.paddle.W, self.paddle.H)), width = 0)
 
     def end_game(self):
         pygame.quit()
         sys.exit()
 
         
+pong = game(800, 600, 400, 400, True, True)
+
+while True:
+    pong.loop()

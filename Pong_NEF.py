@@ -127,17 +127,14 @@ with model:
 
     inp = nengo.Node(input_state)
 
-    ens = nengo.Ensemble(n_neurons=700, dimensions=5)
+    ens = nengo.Ensemble(n_neurons=300, dimensions=5)
     nengo.Connection(inp, ens)
 
     def func(x):
         ball_y = x[1]
         vx = x[2]
         paddle_y = x[4]
-        chase = 0
-        if vx < 0:
-            chase = 1
-        u = 10 * chase * (ball_y - paddle_y)
+        u = 2 * (ball_y - paddle_y)
         return np.tanh(u)
                                                                      
     out = nengo.Node(size_in = 1)
