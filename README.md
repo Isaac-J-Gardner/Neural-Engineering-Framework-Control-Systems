@@ -4,7 +4,7 @@ ID: 11312345
 
 This is the repository for my third year individual project. Requirements.txt provides the list of libraries required to run all the scripts.
 
-Cartpole.py is the custom simulation environment used for all the results provided in the final report, with environment variables given in section 3.4.2.
+Cartpole.py is the custom simulation environment used for all the results provided in the final report experiments 1 through 4, with environment variables given in section 3.4.2.
 
 Cartpole_LQR simulated a classical LQR controller used to produce a baseline for results, shown in experiment 1 results.
 Cartple_LQR_NEF simulates a LQR controller implemented in nengo and is used for experiments 1, and 2.
